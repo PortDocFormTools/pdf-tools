@@ -1,0 +1,24 @@
+{
+  "name": "pdf-backend",
+  "version": "1.0.0",
+  "description": "Minimal PDF upload backend (Express + multer + pdf-parse)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-rate-limit": "^6.11.2",
+    "helmet": "^7.2.0",
+    "multer": "^1.4.5-lts.1",
+    "pdf-parse": "^1.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
