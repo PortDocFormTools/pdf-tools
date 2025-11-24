@@ -22,18 +22,18 @@ curl -F "file=@/path/to/test.pdf" http://localhost:5000/api/upload
 
 The directory contains the client-side part of the project. It provides the initial UI structure for interacting with PDF tools and is designed to be expanded as backend features grow.
 
-frontend:
- ├─ index.html          # Main landing page
- ├─ css/
- │   └─ style.css       # Global styles
- ├─ js/
- │   └─ main.js         # Component loader and basic scripts
- ├─ components/
- │   ├─ header.html     # Header component
- │   ├─ tool-card.html  # Template for PDF tool cards
- │   └─ footer.html     # Footer component
- ├─ pages/
- │   ├─ compress.html   # Placeholder for PDF compression tool
- │   ├─ merge.html      # Placeholder for PDF merging tool
- │   └─ split.html      # Placeholder for PDF splitting tool
- └─ img/                # Static assets
+- frontend/
+  - index.html — Main landing page
+  - css/
+    - style.css — Global styles
+  - js/
+    - main.js — Component loader and basic scripts
+  - components/
+    - header.html — Header component
+    - tool-card.html — Template for PDF tool cards
+    - footer.html — Footer component
+  - pages/
+    - compress.html — Placeholder for PDF compression tool
+    - merge.html — Placeholder for PDF merging tool
+    - split.html — Placeholder for PDF splitting tool
+  - img/ — Static assets
