@@ -1,37 +1,95 @@
 body {
     margin: 0;
+    padding: 0;
     font-family: Arial, sans-serif;
     background: #f5f5f5;
 }
 
-.header {
-    background: #ff5252;
-    color: white;
+/* Layout */
+main.tool-page {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+h1, h2 {
     text-align: center;
-    padding: 40px 0;
+    color: #333;
 }
 
-.main-section {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    padding: 40px;
-}
-
-.tool-card {
+/* Upload block */
+.upload-block {
     background: white;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-* {
-    box-sizing: border-box;
+.upload-block input[type="file"] {
+    margin: 10px 0;
 }
 
-@media (max-width: 768px) {
-   .main-section {
-       flex-direction: column;
-       align-items: center;
-   }
+button {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 8px 18px;
+    background: #1976d2;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1256a1;
+}
+
+/* Split page number inputs */
+.split-range {
+    display: flex;
+    gap: 15px;
+    margin: 10px 0;
+}
+
+.split-range input {
+    width: 80px;
+    padding: 5px;
+}
+
+/* Tool cards */
+.tool-card {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    margin-bottom: 15px;
+}
+
+.tool-card h3 {
+    margin-top: 0;
+}
+
+.tool-card a {
+    display: inline-block;
+    margin-top: 8px;
+    color: white;
+    background: #ff5252;
+    padding: 6px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.tool-card a:hover {
+    background: #d93a3a;
+}
+
+/* Output */
+pre {
+    padding: 15px;
+    background: #222;
+    color: #0f0;
+    border-radius: 8px;
+    margin-top: 20px;
+    overflow: auto;
 }
