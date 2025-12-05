@@ -1,1 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head:
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split PDF</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
 
+<body>
+
+<div id="header"></div>
+
+<main class="tool-page">
+    <h2>Split PDF</h2>
+
+    <div class="upload-block">
+        <p>Select PDF file to split:</p>
+        <input type="file" id="file" accept="application/pdf">
+
+        <div class="split-range">
+            <label>
+                From page:
+                <input type="number" id="from" min="1">
+            </label>
+
+            <label>
+                To page:
+                <input type="number" id="to" min="1">
+            </label>
+        </div>
+
+        <button id="splitBtn">Upload</button>
+    </div>
+
+    <pre id="result"></pre>
+</main>
+
+<div id="footer"></div>
+
+<script src="/js/main.js"></script>
+
+<script>
+document.getElementById("splitBtn").onclick = async () => {
+    const file = document.getElementById("file").files[0];
+    if (!file) {
+        alert("Please select a file.");
+        return;
+    }
+
+    // Prototype behavior — actual split not implemented yet
+    const res = await uploadPDF(file);
+
+    document.getElementById("result").textContent =
+        JSON.stringify(res, null, 2);
+};
+</script>
+
+</body>
+</html>

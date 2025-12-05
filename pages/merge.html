@@ -1,1 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge PDF</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
 
+<body>
+
+<div id="header"></div>
+
+<main class="tool-page">
+    <h2>Merge PDF</h2>
+
+    <div class="upload-block">
+        <p>Select two or more PDF files to merge:</p>
+        <input type="file" id="files" accept="application/pdf" multiple>
+        <button id="mergeBtn">Upload</button>
+    </div>
+
+    <pre id="result"></pre>
+</main>
+
+<div id="footer"></div>
+
+<script src="/js/main.js"></script>
+
+<script>
+document.getElementById("mergeBtn").onclick = async () => {
+    const files = document.getElementById("files").files;
+    if (!files.length) {
+        alert("Please select at least one file.");
+        return;
+    }
+
+    // Prototype behavior — reuse uploadPDF for demo
+    const firstFile = files[0];
+    const res = await uploadPDF(firstFile);
+
+    document.getElementById("result").textContent =
+        JSON.stringify(res, null, 2);
+};
+</script>
+
+</body>
+</html>
