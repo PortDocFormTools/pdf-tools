@@ -8,62 +8,198 @@
 </head>
 <body>
     <div id="header"></div>
+
     <main class="tool-page">
         <h2>Merge PDF</h2>
+        <a href="/index.html" class="home-link">← Back to Home</a>
+
+        <!-- Upload block -->
         <div class="upload-block">
-            <p>Выберите 2 или более файла:</p>
-            <input type="file" id="files" accept="application/pdf" multiple>
-            <button id="mergeBtn">Объединить</button>
+
+            <input type="file" id="files" accept="application/pdf" multiple style="display:none!important;">
+
+            <!-- Drop zone -->
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-content">
+                    <div class="drop-icon">📄</div>
+                    <p><strong>Drag & drop PDF files here</strong></p>
+                    <p>or</p>
+                    <label for="files" class="file-btn">Choose PDF files</label>
+                </div>
+            </div>
+
+            <!-- Files list -->
+            <div id="filesList"></div>
+
+            <button id="mergeBtn">Merge PDFs</button>
         </div>
-        
+
+        <!-- Result -->
         <div id="resultContainer" style="display:none; margin-top:20px;">
-            <p>Готово! <a id="downloadLink" href="#" download>Скачать результат</a></p>
-            <iframe id="previewFrame" width="100%" height="500px"></iframe>
+            <div class="upload-block">
+                <p>
+                    <a id="downloadLink" href="#" download class="btn">Download merged PDF</a>
+                </p>
+                <iframe id="previewFrame" width="100%" height="500px"></iframe>
+            </div>
         </div>
     </main>
+
     <div id="footer"></div>
 
     <script>
+        /* === SVG icons === */
+        const icons = {
+            up: `
+            <svg width="16" height="16" viewBox="0 0 24 24">
+                <path d="M12 5l-7 7h4v7h6v-7h4l-7-7z" fill="currentColor"/>
+            </svg>`,
+
+            down: `
+            <svg width="16" height="16" viewBox="0 0 24 24">
+                <path d="M12 19l7-7h-4V5h-6v7H5l7 7z" fill="currentColor"/>
+            </svg>`,
+
+            remove: `
+            <svg width="16" height="16" viewBox="0 0 24 24">
+                <path d="M6 6l12 12M18 6L6 18"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"/>
+            </svg>`
+        };
+
+        const fileInput = document.getElementById("files");
+        const dropZone = document.getElementById("dropZone");
+        const filesList = document.getElementById("filesList");
+
+        let selectedFiles = [];
+
+        /* === Drag & Drop === */
+        ["dragenter", "dragover"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.remove("dragover");
+            });
+        });
+
+        dropZone.addEventListener("drop", e => {
+            addFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener("change", () => {
+            addFiles(fileInput.files);
+        });
+
+        /* === Add files === */
+        function addFiles(files) {
+            for (let file of files) {
+                if (file.type === "application/pdf") {
+                    selectedFiles.push(file);
+                }
+            }
+            renderFiles();
+        }
+
+        /* === Render list === */
+        function renderFiles() {
+            filesList.innerHTML = "";
+
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement("div");
+                item.className = "file-card";
+
+                item.innerHTML = `
+                    <div class="file-icon">📄</div>
+
+                    <div class="file-info">
+                        <strong>${file.name}</strong>
+                        <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+
+                    <div class="file-actions">
+                        <button title="Move up" onclick="moveUp(${index})">${icons.up}</button>
+                        <button title="Move down" onclick="moveDown(${index})">${icons.down}</button>
+                        <button title="Remove" onclick="removeFile(${index})">${icons.remove}</button>
+                    </div>
+                `;
+
+                filesList.appendChild(item);
+            });
+        }
+
+        /* === Reorder === */
+        window.moveUp = index => {
+            if (index === 0) return;
+            [selectedFiles[index - 1], selectedFiles[index]] =
+            [selectedFiles[index], selectedFiles[index - 1]];
+            renderFiles();
+        };
+
+        window.moveDown = index => {
+            if (index === selectedFiles.length - 1) return;
+            [selectedFiles[index + 1], selectedFiles[index]] =
+            [selectedFiles[index], selectedFiles[index + 1]];
+            renderFiles();
+        };
+
+        window.removeFile = index => {
+            selectedFiles.splice(index, 1);
+            renderFiles();
+        };
+
+        /* === Merge === */
         document.getElementById("mergeBtn").onclick = async () => {
-            const fileInput = document.getElementById("files");
-            if (fileInput.files.length < 2) return alert("Нужно минимум 2 файла.");
+            if (selectedFiles.length < 2) {
+                return alert("Please select at least two PDF files.");
+            }
 
             const btn = document.getElementById("mergeBtn");
-            btn.innerText = "Обработка...";
+            btn.innerText = "Merging...";
             btn.disabled = true;
 
             const formData = new FormData();
-            for (let i = 0; i < fileInput.files.length; i++) {
-                formData.append("files", fileInput.files[i]);
-            }
+            selectedFiles.forEach(file => formData.append("files", file));
 
             try {
-                const response = await fetch('/api/merge', { method: 'POST', body: formData });
+                const response = await fetch("/api/merge", {
+                    method: "POST",
+                    body: formData
+                });
+
                 const result = await response.json();
 
                 if (result.ok) {
-                    // Base64 -> Blob (обязательно для Merge, иначе превью не покажет)
-                    const byteCharacters = atob(result.pdfBase64);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    const bytes = atob(result.pdfBase64);
+                    const buffer = new Uint8Array(bytes.length);
+                    for (let i = 0; i < bytes.length; i++) {
+                        buffer[i] = bytes.charCodeAt(i);
                     }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], { type: 'application/pdf' });
-                    const blobUrl = URL.createObjectURL(blob);
 
-                    document.getElementById("downloadLink").href = blobUrl;
-                    document.getElementById("downloadLink").download = result.originalName;
-                    document.getElementById("previewFrame").src = blobUrl;
+                    const blob = new Blob([buffer], { type: "application/pdf" });
+                    const url = URL.createObjectURL(blob);
+
+                    const dl = document.getElementById("downloadLink");
+                    dl.href = url;
+                    dl.download = result.originalName;
+
+                    document.getElementById("previewFrame").src = url;
                     document.getElementById("resultContainer").style.display = "block";
                 } else {
-                    alert("Ошибка: " + result.error);
+                    alert("Error: " + result.error);
                 }
             } catch (e) {
                 console.error(e);
-                alert("Ошибка сервера");
+                alert("Server error occurred.");
             } finally {
-                btn.innerText = "Объединить";
+                btn.innerText = "Merge PDFs";
                 btn.disabled = false;
             }
         };

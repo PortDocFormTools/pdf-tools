@@ -8,36 +8,137 @@
 </head>
 <body>
     <div id="header"></div>
+
     <main class="tool-page">
         <h2>Split PDF</h2>
+        <a href="/index.html" class="home-link">← Back to Home</a>
+
+        <!-- Upload block -->
         <div class="upload-block">
-            <p>Select PDF file to split:</p>
-            <input type="file" id="file" accept="application/pdf">
-            <div class="split-range">
-                <label>From page: <input type="number" id="from" min="1" value="1"></label>
-                <label>To page: <input type="number" id="to" min="1" value="1"></label>
+
+            <input type="file" id="file" accept="application/pdf" style="display:none!important;">
+
+            <!-- Drop zone -->
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-content">
+                    <div class="drop-icon">📄</div>
+                    <p><strong>Drag & drop PDF here</strong></p>
+                    <p>or</p>
+                    <label for="file" class="file-btn">Choose PDF file</label>
+                </div>
             </div>
-            <button id="splitBtn">Split File</button>
+
+            <!-- File preview -->
+            <div id="filePreview" class="file-card" style="display:none;">
+                <div class="file-icon">📄</div>
+
+                <div class="file-info">
+                    <strong id="fileName"></strong>
+                    <span id="fileSize"></span>
+                </div>
+
+                <div class="file-actions">
+                    <button title="Remove file" id="removeFileBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24">
+                            <path d="M6 6l12 12M18 6L6 18"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Page range -->
+            <div class="split-range">
+                <label>
+                    From page
+                    <input type="number" id="from" min="1" value="1">
+                </label>
+                <label>
+                    To page
+                    <input type="number" id="to" min="1" value="1">
+                </label>
+            </div>
+
+            <button id="splitBtn">Split PDF</button>
         </div>
 
+        <!-- Result -->
         <div id="resultContainer" style="display:none; margin-top:20px;">
-            <p>Success! <a id="downloadLink" href="#" download>Download Split PDF</a></p>
-            <iframe id="previewFrame" width="100%" height="500px"></iframe>
+            <div class="upload-block">
+                <p>
+                    <a id="downloadLink" href="#" download class="btn">Download split PDF</a>
+                </p>
+                <iframe id="previewFrame" width="100%" height="500px"></iframe>
+            </div>
         </div>
     </main>
+
     <div id="footer"></div>
 
     <script>
+        const fileInput = document.getElementById("file");
+        const dropZone = document.getElementById("dropZone");
+        const filePreview = document.getElementById("filePreview");
+        const removeFileBtn = document.getElementById("removeFileBtn");
+
+        /* === Drag & Drop === */
+        ["dragenter", "dragover"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.remove("dragover");
+            });
+        });
+
+        dropZone.addEventListener("drop", e => {
+            const files = e.dataTransfer.files;
+            if (!files.length) return;
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event("change"));
+        });
+
+        /* === File preview === */
+        fileInput.onchange = () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            document.getElementById("fileName").textContent = file.name;
+            document.getElementById("fileSize").textContent =
+                (file.size / 1024 / 1024).toFixed(2) + " MB";
+
+            filePreview.style.display = "flex";
+        };
+
+        /* === Remove file === */
+        removeFileBtn.onclick = () => {
+            fileInput.value = "";
+            filePreview.style.display = "none";
+
+            document.getElementById("resultContainer").style.display = "none";
+            document.getElementById("previewFrame").src = "";
+            document.getElementById("downloadLink").href = "#";
+        };
+
+        /* === Split === */
         document.getElementById("splitBtn").onclick = async () => {
-            const file = document.getElementById("file").files[0];
+            const file = fileInput.files[0];
             const start = document.getElementById("from").value;
             const end = document.getElementById("to").value;
 
-            if (!file) return alert("Please select a file.");
-            if (!start || !end) return alert("Please set page range.");
+            if (!file) return alert("Please select a PDF file.");
+            if (!start || !end) return alert("Please specify the page range.");
 
             const btn = document.getElementById("splitBtn");
             btn.innerText = "Splitting...";
+            btn.disabled = true;
 
             const formData = new FormData();
             formData.append("file", file);
@@ -45,22 +146,32 @@
             formData.append("end", end);
 
             try {
-                const response = await fetch('/api/split', { method: 'POST', body: formData });
+                const response = await fetch("/api/split", {
+                    method: "POST",
+                    body: formData
+                });
+
                 const result = await response.json();
 
                 if (result.ok) {
                     const url = `data:application/pdf;base64,${result.pdfBase64}`;
-                    document.getElementById("downloadLink").href = url;
-                    document.getElementById("downloadLink").download = result.originalName;
+
+                    const dl = document.getElementById("downloadLink");
+                    dl.href = url;
+                    dl.download = result.originalName;
+
                     document.getElementById("previewFrame").src = url;
                     document.getElementById("resultContainer").style.display = "block";
                 } else {
                     alert("Error: " + result.error);
                 }
             } catch (e) {
-                alert("Server error");
+                console.error(e);
+                alert("Server error occurred.");
+            } finally {
+                btn.innerText = "Split PDF";
+                btn.disabled = false;
             }
-            btn.innerText = "Split File";
         };
     </script>
 </body>
