@@ -6,43 +6,67 @@
     <title>Merge PDF</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body>
+    <div id="header"></div>
+    <main class="tool-page">
+        <h2>Merge PDF</h2>
+        <div class="upload-block">
+            <p>Выберите 2 или более файла:</p>
+            <input type="file" id="files" accept="application/pdf" multiple>
+            <button id="mergeBtn">Объединить</button>
+        </div>
+        
+        <div id="resultContainer" style="display:none; margin-top:20px;">
+            <p>Готово! <a id="downloadLink" href="#" download>Скачать результат</a></p>
+            <iframe id="previewFrame" width="100%" height="500px"></iframe>
+        </div>
+    </main>
+    <div id="footer"></div>
 
-<div id="header"></div>
+    <script>
+        document.getElementById("mergeBtn").onclick = async () => {
+            const fileInput = document.getElementById("files");
+            if (fileInput.files.length < 2) return alert("Нужно минимум 2 файла.");
 
-<main class="tool-page">
-    <h2>Merge PDF</h2>
+            const btn = document.getElementById("mergeBtn");
+            btn.innerText = "Обработка...";
+            btn.disabled = true;
 
-    <div class="upload-block">
-        <p>Select two or more PDF files to merge:</p>
-        <input type="file" id="files" accept="application/pdf" multiple>
-        <button id="mergeBtn">Upload</button>
-    </div>
+            const formData = new FormData();
+            for (let i = 0; i < fileInput.files.length; i++) {
+                formData.append("files", fileInput.files[i]);
+            }
 
-    <pre id="result"></pre>
-</main>
+            try {
+                const response = await fetch('/api/merge', { method: 'POST', body: formData });
+                const result = await response.json();
 
-<div id="footer"></div>
+                if (result.ok) {
+                    // Base64 -> Blob (обязательно для Merge, иначе превью не покажет)
+                    const byteCharacters = atob(result.pdfBase64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+                    const blobUrl = URL.createObjectURL(blob);
 
-<script src="/js/main.js"></script>
-
-<script>
-document.getElementById("mergeBtn").onclick = async () => {
-    const files = document.getElementById("files").files;
-    if (!files.length) {
-        alert("Please select at least one file.");
-        return;
-    }
-
-    // Prototype behavior — reuse uploadPDF for demo
-    const firstFile = files[0];
-    const res = await uploadPDF(firstFile);
-
-    document.getElementById("result").textContent =
-        JSON.stringify(res, null, 2);
-};
-</script>
-
+                    document.getElementById("downloadLink").href = blobUrl;
+                    document.getElementById("downloadLink").download = result.originalName;
+                    document.getElementById("previewFrame").src = blobUrl;
+                    document.getElementById("resultContainer").style.display = "block";
+                } else {
+                    alert("Ошибка: " + result.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка сервера");
+            } finally {
+                btn.innerText = "Объединить";
+                btn.disabled = false;
+            }
+        };
+    </script>
 </body>
 </html>
