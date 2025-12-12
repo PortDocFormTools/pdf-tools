@@ -1,0 +1,49 @@
+.upload-block {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.upload-block input[type="file"] {
+    display: block;
+    margin-bottom: 15px;
+}
+
+.drop-zone {
+    border: 2px dashed #e53935;
+    border-radius: 14px;
+    padding: 30px;
+    text-align: center;
+    transition: 0.2s;
+    background: #fafafa;
+    margin-bottom: 15px;
+}
+
+.drop-zone.dragover {
+    background: #ffecec;
+    border-color: #d32f2f;
+}
+
+.drop-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.file-btn {
+    display: inline-block;
+    background-color: #f5f5f5;
+    border: 2px dashed #e53935;
+    color: #333;
+    padding: 14px 22px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    margin-bottom: 10px;
+}
+
+.file-btn:hover {
+    background-color: #ffecec;
+    border-color: #d32f2f;
+}

@@ -1,0 +1,26 @@
+.tool-card {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin-bottom: 20px;
+}
+
+.tool-card h3 {
+    margin-top: 0;
+}
+
+.tool-card a {
+    display: inline-block;
+    margin-top: 12px;
+    background: #ff5252;
+    padding: 8px 18px;
+    border-radius: 8px;
+    color: #ffffff;
+    text-decoration: none;
+}
+
+.tool-card a:hover {
+    background: #d93a3a;
+}

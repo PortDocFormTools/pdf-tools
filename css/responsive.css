@@ -1,0 +1,10 @@
+@media (max-width: 600px) {
+    .split-range {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    main.tool-page {
+        padding: 15px;
+    }
+}

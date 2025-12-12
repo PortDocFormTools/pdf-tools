@@ -1,0 +1,50 @@
+.file-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 14px;
+    background: #fafafa;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.file-icon {
+    font-size: 42px;
+    margin-right: 16px;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-info strong {
+    display: block;
+    font-size: 15px;
+    margin-bottom: 4px;
+}
+
+.file-info span {
+    font-size: 13px;
+    color: #666;
+}
+
+.file-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.file-actions button {
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 6px;
+    cursor: pointer;
+    color: #555;
+}
+
+.file-actions button:hover {
+    background: #ffecec;
+    border-color: #e53935;
+    color: #e53935;
+}

@@ -1,0 +1,15 @@
+.split-range {
+    display: flex;
+    gap: 20px;
+    margin: 15px 0;
+}
+
+.split-range label {
+    font-size: 14px;
+}
+
+.split-range input {
+    width: 90px;
+    padding: 6px;
+    margin-left: 5px;
+}

@@ -1,0 +1,35 @@
+button,
+a.btn {
+    display: inline-block;
+    padding: 12px 22px;
+    background: #1976d2;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s ease;
+}
+
+button:hover,
+a.btn:hover {
+    background: #1256a1;
+}
+
+button:disabled {
+    background: #bdbdbd;
+    cursor: not-allowed;
+}
+
+.home-link {
+    display: inline-block;
+    margin: 10px 0;
+    text-decoration: none;
+    color: #e53935;
+    font-weight: 600;
+}
+
+.home-link:hover {
+    text-decoration: underline;
+}
