@@ -6,7 +6,7 @@ const path = require('path');
 const helmet = require('helmet');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5050;
 
 // 1. Отдаем статические файлы (html, css, js)
 app.use(express.static(__dirname));
