@@ -6,39 +6,181 @@
     <title>Compress PDF</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body>
-
     <div id="header"></div>
 
     <main class="tool-page">
         <h2>Compress PDF</h2>
+        <a href="/index.html" class="home-link">← Back to Home</a>
 
+        <!-- Upload block -->
         <div class="upload-block">
-            <input type="file" id="file" accept="application/pdf">
-            <button id="uploadBtn">Upload</button>
+
+            <input type="file" id="file" accept="application/pdf" style="display:none!important;">
+
+            <!-- Drop zone -->
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-content">
+                    <div class="drop-icon">📄</div>
+                    <p><strong>Drag & drop PDF here</strong></p>
+                    <p>or</p>
+                    <label for="file" class="file-btn">Choose PDF file</label>
+                </div>
+            </div>
+
+            <!-- File preview -->
+            <div id="filePreview" class="file-card" style="display:none;">
+                <div class="file-icon">📄</div>
+
+                <div class="file-info">
+                    <strong id="fileName"></strong>
+                    <span id="fileSize"></span>
+                </div>
+
+                <div class="file-actions">
+                    <button title="Remove file" id="removeFileBtn">
+                        <svg width="16" height="16" viewBox="0 0 24 24">
+                            <path d="M6 6l12 12M18 6L6 18"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <button id="uploadBtn">Upload and Compress</button>
         </div>
 
-        <pre id="result"></pre>
+        <!-- Result block -->
+        <div id="resultContainer" style="display:none;">
+            <div class="upload-block">
+                <p>
+                    <strong>Result</strong><br>
+                    Original size: <span id="oldSize"></span><br>
+                    Compressed size: <span id="newSize"></span>
+                </p>
+
+                <a id="downloadLink" href="#" download class="btn">Download compressed file</a>
+                <br><br>
+
+                <iframe id="previewFrame" width="100%" height="500px"></iframe>
+            </div>
+        </div>
     </main>
 
     <div id="footer"></div>
 
-    <script src="/js/main.js"></script>
-
     <script>
-        document.getElementById("uploadBtn").onclick = async () => {
-            const file = document.getElementById("file").files[0];
-            if (!file) {
-                alert("Please select a file.");
-                return;
-            }
+        const dropZone = document.getElementById("dropZone");
+        const fileInput = document.getElementById("file");
+        const filePreview = document.getElementById("filePreview");
+        const removeFileBtn = document.getElementById("removeFileBtn");
 
-            const result = await uploadPDF(file);
-            document.getElementById("result").textContent =
-                JSON.stringify(result, null, 2);
+        /* === Drag & Drop === */
+        ["dragenter", "dragover"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.remove("dragover");
+            });
+        });
+
+        dropZone.addEventListener("drop", e => {
+            const files = e.dataTransfer.files;
+            if (!files.length) return;
+            fileInput.files = files;
+            fileInput.dispatchEvent(new Event("change"));
+        });
+
+        function formatBytes(bytes) {
+            if (!bytes || isNaN(bytes)) return "0 KB";
+            const k = 1024;
+            const sizes = ["Bytes", "KB", "MB"];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+        }
+
+        /* === File preview === */
+        fileInput.onchange = () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            document.getElementById("fileName").textContent = file.name;
+            document.getElementById("fileSize").textContent =
+                (file.size / 1024 / 1024).toFixed(2) + " MB";
+
+            filePreview.style.display = "flex";
+        };
+
+        /* === Remove file === */
+        removeFileBtn.onclick = () => {
+            fileInput.value = "";
+            filePreview.style.display = "none";
+
+            document.getElementById("resultContainer").style.display = "none";
+            document.getElementById("previewFrame").src = "";
+            document.getElementById("downloadLink").href = "#";
+        };
+
+        /* === Upload and compress === */
+        document.getElementById("uploadBtn").onclick = async () => {
+            const file = fileInput.files[0];
+            if (!file) return alert("Please select a PDF file.");
+
+            const btn = document.getElementById("uploadBtn");
+            btn.innerText = "Compressing...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            try {
+                const response = await fetch("/api/compress", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    const bytes = atob(result.pdfBase64);
+                    const buffer = new Uint8Array(bytes.length);
+                    for (let i = 0; i < bytes.length; i++) {
+                        buffer[i] = bytes.charCodeAt(i);
+                    }
+
+                    const blob = new Blob([buffer], { type: "application/pdf" });
+                    const url = URL.createObjectURL(blob);
+
+                    document.getElementById("oldSize").textContent =
+                        formatBytes(result.originalSize);
+                    document.getElementById("newSize").textContent =
+                        formatBytes(result.newSize);
+
+                    const dl = document.getElementById("downloadLink");
+                    dl.href = url;
+                    dl.download = "compressed_" + result.originalName;
+
+                    document.getElementById("previewFrame").src = url;
+                    document.getElementById("resultContainer").style.display = "block";
+                } else {
+                    alert("Error: " + result.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Server error occurred.");
+            } finally {
+                btn.innerText = "Upload and Compress";
+                btn.disabled = false;
+            }
         };
     </script>
-
 </body>
 </html>

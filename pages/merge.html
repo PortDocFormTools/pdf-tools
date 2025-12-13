@@ -6,43 +6,203 @@
     <title>Merge PDF</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body>
+    <div id="header"></div>
 
-<div id="header"></div>
+    <main class="tool-page">
+        <h2>Merge PDF</h2>
+        <a href="/index.html" class="home-link">← Back to Home</a>
 
-<main class="tool-page">
-    <h2>Merge PDF</h2>
+        <!-- Upload block -->
+        <div class="upload-block">
 
-    <div class="upload-block">
-        <p>Select two or more PDF files to merge:</p>
-        <input type="file" id="files" accept="application/pdf" multiple>
-        <button id="mergeBtn">Upload</button>
-    </div>
+            <input type="file" id="files" accept="application/pdf" multiple style="display:none!important;">
 
-    <pre id="result"></pre>
-</main>
+            <!-- Drop zone -->
+            <div id="dropZone" class="drop-zone">
+                <div class="drop-content">
+                    <div class="drop-icon">📄</div>
+                    <p><strong>Drag & drop PDF files here</strong></p>
+                    <p>or</p>
+                    <label for="files" class="file-btn">Choose PDF files</label>
+                </div>
+            </div>
 
-<div id="footer"></div>
+            <!-- Files list -->
+            <div id="filesList"></div>
 
-<script src="/js/main.js"></script>
+            <button id="mergeBtn">Merge PDFs</button>
+        </div>
 
-<script>
-document.getElementById("mergeBtn").onclick = async () => {
-    const files = document.getElementById("files").files;
-    if (!files.length) {
-        alert("Please select at least one file.");
-        return;
-    }
+        <!-- Result -->
+        <div id="resultContainer" style="display:none; margin-top:20px;">
+            <div class="upload-block">
+                <p>
+                    <a id="downloadLink" href="#" download class="btn">Download merged PDF</a>
+                </p>
+                <iframe id="previewFrame" width="100%" height="500px"></iframe>
+            </div>
+        </div>
+    </main>
 
-    // Prototype behavior — reuse uploadPDF for demo
-    const firstFile = files[0];
-    const res = await uploadPDF(firstFile);
+    <div id="footer"></div>
 
-    document.getElementById("result").textContent =
-        JSON.stringify(res, null, 2);
-};
-</script>
+    <script>
+        /* === SVG icons === */
+        const icons = {
+            up: `
+            <svg width="16" height="16" viewBox="0 0 24 24">
+                <path d="M12 5l-7 7h4v7h6v-7h4l-7-7z" fill="currentColor"/>
+            </svg>`,
 
+            down: `
+            <svg width="16" height="16" viewBox="0 0 24 24">
+                <path d="M12 19l7-7h-4V5h-6v7H5l7 7z" fill="currentColor"/>
+            </svg>`,
+
+            remove: `
+            <svg width="16" height="16" viewBox="0 0 24 24">
+                <path d="M6 6l12 12M18 6L6 18"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"/>
+            </svg>`
+        };
+
+        const fileInput = document.getElementById("files");
+        const dropZone = document.getElementById("dropZone");
+        const filesList = document.getElementById("filesList");
+
+        let selectedFiles = [];
+
+        /* === Drag & Drop === */
+        ["dragenter", "dragover"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.add("dragover");
+            });
+        });
+
+        ["dragleave", "drop"].forEach(evt => {
+            dropZone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropZone.classList.remove("dragover");
+            });
+        });
+
+        dropZone.addEventListener("drop", e => {
+            addFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener("change", () => {
+            addFiles(fileInput.files);
+        });
+
+        /* === Add files === */
+        function addFiles(files) {
+            for (let file of files) {
+                if (file.type === "application/pdf") {
+                    selectedFiles.push(file);
+                }
+            }
+            renderFiles();
+        }
+
+        /* === Render list === */
+        function renderFiles() {
+            filesList.innerHTML = "";
+
+            selectedFiles.forEach((file, index) => {
+                const item = document.createElement("div");
+                item.className = "file-card";
+
+                item.innerHTML = `
+                    <div class="file-icon">📄</div>
+
+                    <div class="file-info">
+                        <strong>${file.name}</strong>
+                        <span>${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                    </div>
+
+                    <div class="file-actions">
+                        <button title="Move up" onclick="moveUp(${index})">${icons.up}</button>
+                        <button title="Move down" onclick="moveDown(${index})">${icons.down}</button>
+                        <button title="Remove" onclick="removeFile(${index})">${icons.remove}</button>
+                    </div>
+                `;
+
+                filesList.appendChild(item);
+            });
+        }
+
+        /* === Reorder === */
+        window.moveUp = index => {
+            if (index === 0) return;
+            [selectedFiles[index - 1], selectedFiles[index]] =
+            [selectedFiles[index], selectedFiles[index - 1]];
+            renderFiles();
+        };
+
+        window.moveDown = index => {
+            if (index === selectedFiles.length - 1) return;
+            [selectedFiles[index + 1], selectedFiles[index]] =
+            [selectedFiles[index], selectedFiles[index + 1]];
+            renderFiles();
+        };
+
+        window.removeFile = index => {
+            selectedFiles.splice(index, 1);
+            renderFiles();
+        };
+
+        /* === Merge === */
+        document.getElementById("mergeBtn").onclick = async () => {
+            if (selectedFiles.length < 2) {
+                return alert("Please select at least two PDF files.");
+            }
+
+            const btn = document.getElementById("mergeBtn");
+            btn.innerText = "Merging...";
+            btn.disabled = true;
+
+            const formData = new FormData();
+            selectedFiles.forEach(file => formData.append("files", file));
+
+            try {
+                const response = await fetch("/api/merge", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.ok) {
+                    const bytes = atob(result.pdfBase64);
+                    const buffer = new Uint8Array(bytes.length);
+                    for (let i = 0; i < bytes.length; i++) {
+                        buffer[i] = bytes.charCodeAt(i);
+                    }
+
+                    const blob = new Blob([buffer], { type: "application/pdf" });
+                    const url = URL.createObjectURL(blob);
+
+                    const dl = document.getElementById("downloadLink");
+                    dl.href = url;
+                    dl.download = result.originalName;
+
+                    document.getElementById("previewFrame").src = url;
+                    document.getElementById("resultContainer").style.display = "block";
+                } else {
+                    alert("Error: " + result.error);
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Server error occurred.");
+            } finally {
+                btn.innerText = "Merge PDFs";
+                btn.disabled = false;
+            }
+        };
+    </script>
 </body>
 </html>
