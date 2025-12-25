@@ -14,6 +14,9 @@ cd pdf-tools
 cp .env.example .env
 ```
 **Install dependencies**
+
+**Note:** Before installing dependencies, make sure you have **Node.js with npm** installed.  
+You can download it here: [Node.js](https://nodejs.org/en/download)
 ```
 npm install
 ```
@@ -22,8 +25,4 @@ npm install
 **To run the project**
 ```
 npm start
-```
-or
-```
-npm run dev # requires nodemon
 ```
