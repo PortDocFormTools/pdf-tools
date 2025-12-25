@@ -15,16 +15,17 @@ async function loadTools() {
     const cardTemplate = await fetch("/components/tool-card.html").then(res => res.text());
 
     const tools = [
-        { title: "Compress PDF", link: "/pages/compress.html" },
-        { title: "Merge PDF", link: "/pages/merge.html" },
-        { title: "Split PDF", link: "/pages/split.html" }
+        { title: "Compress PDF", link: "/pages/compress.html", testId: "compress" },
+        { title: "Merge PDF", link: "/pages/merge.html", testId: "merge" },
+        { title: "Split PDF", link: "/pages/split.html", testId: "split" }
     ];
 
-    container.innerHTML = tools.map(t =>
-        cardTemplate
+    container.innerHTML = tools.map(t => {
+        return cardTemplate
             .replace("{{title}}", t.title)
             .replace("{{link}}", t.link)
-    ).join("");
+            .replace("{{testid}}", t.testId);
+    }).join("");
 }
 
 loadTools();
