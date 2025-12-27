@@ -26,3 +26,4 @@ npm install
 ```
 npm start
 ```
+Press Ctrl + C to stop the Server.
