@@ -71,115 +71,19 @@
 
     <div id="footer"></div>
 
-    <script>
-        const dropZone = document.getElementById("dropZone");
+    <script src="/js/main.js"></script>
+    <script type="module">
+        import { compressPdf } from "/js/services/mockPdfService.js";
+
         const fileInput = document.getElementById("file");
-        const filePreview = document.getElementById("filePreview");
-        const removeFileBtn = document.getElementById("removeFileBtn");
+        const uploadBtn = document.getElementById("uploadBtn");
 
-        /* === Drag & Drop === */
-        ["dragenter", "dragover"].forEach(evt => {
-            dropZone.addEventListener(evt, e => {
-                e.preventDefault();
-                dropZone.classList.add("dragover");
-            });
-        });
-
-        ["dragleave", "drop"].forEach(evt => {
-            dropZone.addEventListener(evt, e => {
-                e.preventDefault();
-                dropZone.classList.remove("dragover");
-            });
-        });
-
-        dropZone.addEventListener("drop", e => {
-            const files = e.dataTransfer.files;
-            if (!files.length) return;
-            fileInput.files = files;
-            fileInput.dispatchEvent(new Event("change"));
-        });
-
-        function formatBytes(bytes) {
-            if (!bytes || isNaN(bytes)) return "0 KB";
-            const k = 1024;
-            const sizes = ["Bytes", "KB", "MB"];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-        }
-
-        /* === File preview === */
-        fileInput.onchange = () => {
+        uploadBtn.onclick = async () => {
             const file = fileInput.files[0];
-            if (!file) return;
+            if (!file) return alert("Select a PDF file");
 
-            document.getElementById("fileName").textContent = file.name;
-            document.getElementById("fileSize").textContent =
-                (file.size / 1024 / 1024).toFixed(2) + " MB";
-
-            filePreview.style.display = "flex";
-        };
-
-        /* === Remove file === */
-        removeFileBtn.onclick = () => {
-            fileInput.value = "";
-            filePreview.style.display = "none";
-
-            document.getElementById("resultContainer").style.display = "none";
-            document.getElementById("previewFrame").src = "";
-            document.getElementById("downloadLink").href = "#";
-        };
-
-        /* === Upload and compress === */
-        document.getElementById("uploadBtn").onclick = async () => {
-            const file = fileInput.files[0];
-            if (!file) return alert("Please select a PDF file.");
-
-            const btn = document.getElementById("uploadBtn");
-            btn.innerText = "Compressing...";
-            btn.disabled = true;
-
-            const formData = new FormData();
-            formData.append("file", file);
-
-            try {
-                const response = await fetch("/api/compress", {
-                    method: "POST",
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.ok) {
-                    const bytes = atob(result.pdfBase64);
-                    const buffer = new Uint8Array(bytes.length);
-                    for (let i = 0; i < bytes.length; i++) {
-                        buffer[i] = bytes.charCodeAt(i);
-                    }
-
-                    const blob = new Blob([buffer], { type: "application/pdf" });
-                    const url = URL.createObjectURL(blob);
-
-                    document.getElementById("oldSize").textContent =
-                        formatBytes(result.originalSize);
-                    document.getElementById("newSize").textContent =
-                        formatBytes(result.newSize);
-
-                    const dl = document.getElementById("downloadLink");
-                    dl.href = url;
-                    dl.download = "compressed_" + result.originalName;
-
-                    document.getElementById("previewFrame").src = url;
-                    document.getElementById("resultContainer").style.display = "block";
-                } else {
-                    alert("Error: " + result.error);
-                }
-            } catch (e) {
-                console.error(e);
-                alert("Server error occurred.");
-            } finally {
-                btn.innerText = "Upload and Compress";
-                btn.disabled = false;
-            }
+            const result = await compressPdf(file);
+            console.log(result);
         };
     </script>
 </body>

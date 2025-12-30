@@ -77,101 +77,19 @@
 
     <div id="footer"></div>
 
-    <script>
-        const fileInput = document.getElementById("file");
-        const dropZone = document.getElementById("dropZone");
-        const filePreview = document.getElementById("filePreview");
-        const removeFileBtn = document.getElementById("removeFileBtn");
+    <script src="/js/main.js"></script>
+    <script type="module">
+        import { splitPdf } from "/js/services/pdfService.js";
 
-        /* === Drag & Drop === */
-        ["dragenter", "dragover"].forEach(evt => {
-            dropZone.addEventListener(evt, e => {
-                e.preventDefault();
-                dropZone.classList.add("dragover");
-            });
-        });
-
-        ["dragleave", "drop"].forEach(evt => {
-            dropZone.addEventListener(evt, e => {
-                e.preventDefault();
-                dropZone.classList.remove("dragover");
-            });
-        });
-
-        dropZone.addEventListener("drop", e => {
-            const files = e.dataTransfer.files;
-            if (!files.length) return;
-            fileInput.files = files;
-            fileInput.dispatchEvent(new Event("change"));
-        });
-
-        /* === File preview === */
-        fileInput.onchange = () => {
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            document.getElementById("fileName").textContent = file.name;
-            document.getElementById("fileSize").textContent =
-                (file.size / 1024 / 1024).toFixed(2) + " MB";
-
-            filePreview.style.display = "flex";
-        };
-
-        /* === Remove file === */
-        removeFileBtn.onclick = () => {
-            fileInput.value = "";
-            filePreview.style.display = "none";
-
-            document.getElementById("resultContainer").style.display = "none";
-            document.getElementById("previewFrame").src = "";
-            document.getElementById("downloadLink").href = "#";
-        };
-
-        /* === Split === */
         document.getElementById("splitBtn").onclick = async () => {
-            const file = fileInput.files[0];
-            const start = document.getElementById("from").value;
-            const end = document.getElementById("to").value;
+            const file = document.getElementById("file").files[0];
+            const start = document.getElementById("start").value;
+            const end = document.getElementById("end").value;
 
-            if (!file) return alert("Please select a PDF file.");
-            if (!start || !end) return alert("Please specify the page range.");
+            if (!file) return alert("Select a PDF");
 
-            const btn = document.getElementById("splitBtn");
-            btn.innerText = "Splitting...";
-            btn.disabled = true;
-
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("start", start);
-            formData.append("end", end);
-
-            try {
-                const response = await fetch("/api/split", {
-                    method: "POST",
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (result.ok) {
-                    const url = `data:application/pdf;base64,${result.pdfBase64}`;
-
-                    const dl = document.getElementById("downloadLink");
-                    dl.href = url;
-                    dl.download = result.originalName;
-
-                    document.getElementById("previewFrame").src = url;
-                    document.getElementById("resultContainer").style.display = "block";
-                } else {
-                    alert("Error: " + result.error);
-                }
-            } catch (e) {
-                console.error(e);
-                alert("Server error occurred.");
-            } finally {
-                btn.innerText = "Split PDF";
-                btn.disabled = false;
-            }
+            const result = await splitPdf(file, start, end);
+            console.log(result);
         };
     </script>
 </body>

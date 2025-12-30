@@ -1,11 +1,14 @@
 // Динамічне завантаження компонентів
-async function loadComponent(id, file) {
-    const html = await fetch(`/components/${file}`).then(res => res.text());
-    document.getElementById(id).innerHTML = html;
+async function loadComponent(id, path) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const response = await fetch(path);
+    el.innerHTML = await response.text();
 }
 
-loadComponent("header", "header.html");
-loadComponent("footer", "footer.html");
+loadComponent("header", "/components/header.html");
+loadComponent("footer", "/components/footer.html");
 
 // Завантаження карток інструментів
 async function loadTools() {
