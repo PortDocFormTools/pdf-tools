@@ -126,7 +126,7 @@ mergeBtn.onclick = async () => {
             const bytes = atob(result.pdfBase64);
             const buffer = new Uint8Array(bytes.length);
             for (let i = 0; i < bytes.length; i++) {
-                buffer[i] = bytes.charCodeAt(i);
+                buffer[i] = bytes.codePointAt(i);
             }
 
             const blob = new Blob([buffer], { type: "application/pdf" });

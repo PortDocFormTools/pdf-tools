@@ -40,7 +40,7 @@
                 <p>
                     <a id="downloadLink" href="#" download class="btn">Download merged PDF</a>
                 </p>
-                <iframe id="previewFrame" width="100%" height="500px"></iframe>
+                <iframe id="previewFrame" title="Merged PDF" width="100%" height="500px"></iframe>
             </div>
         </div>
     </main>
@@ -48,16 +48,6 @@
     <div id="footer"></div>
 
     <script src="/js/main.js"></script>
-    <script type="module">
-        import { mergePdf } from "/js/services/pdfService.js";
-
-        document.getElementById("mergeBtn").onclick = async () => {
-            const files = [...document.getElementById("files").files];
-            if (files.length < 2) return alert("Select at least two files");
-
-            const result = await mergePdf(files);
-            console.log(result);
-        };
-    </script>
+    <script type="module" src="/js/pages/mergePage.js"></script>
 </body>
 </html>

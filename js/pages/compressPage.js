@@ -56,7 +56,34 @@ uploadBtn.onclick = async () => {
 
     try {
         const result = await compressPdf(file);
-        console.log(result);
+        
+        if (result.ok) {
+
+            const bytes = atob(result.pdfBase64);
+            const buffer = new Uint8Array(bytes.length);
+            for (let i = 0; i < bytes.length; i++) {
+                buffer[i] = bytes.codePointAt(i);
+            }
+
+            const blob = new Blob([buffer], { type: "application/pdf" });
+            const url = URL.createObjectURL(blob);
+
+            document.getElementById("previewFrame").src = url;
+
+            const downloadLink = document.getElementById("downloadLink");
+            downloadLink.href = url;
+            downloadLink.download = result.originalName;
+
+            document.getElementById("oldSize").innerText = result.originalSize;
+            document.getElementById("newSize").innerText = result.newSize;
+
+            document.getElementById("resultContainer").style.display = "block";
+        } else {
+            alert("Error: " + result.error);
+        }
+    } catch (e) {
+        console.error(e);
+        alert("Server error occurred.");
     } finally {
         uploadBtn.disabled = false;
         uploadBtn.innerText = "Upload and Compress";
