@@ -7,9 +7,6 @@ async function loadComponent(id, path) {
     el.innerHTML = await response.text();
 }
 
-loadComponent("header", "/components/header.html");
-loadComponent("footer", "/components/footer.html");
-
 // Завантаження карток інструментів
 async function loadTools() {
     const container = document.getElementById("tools");
@@ -31,8 +28,6 @@ async function loadTools() {
     }).join("");
 }
 
-loadTools();
-
 // Інтеграція з backend API
 async function uploadPDF(file) {
     const form = new FormData();
@@ -45,3 +40,8 @@ async function uploadPDF(file) {
 
     return await res.json();
 }
+
+loadComponent("header", "/components/header.html");
+loadComponent("footer", "/components/footer.html");
+
+loadTools();

@@ -67,8 +67,11 @@ splitBtn.onclick = async () => {
 
         if (result.ok) {
             const url = `data:application/pdf;base64,${result.pdfBase64}`;
-            document.getElementById("downloadLink").href = url;
-            document.getElementById("downloadLink").download = result.originalName;
+
+            const downloadLink = document.getElementById("downloadLink");
+            downloadLink.href = url;
+            downloadLink.download = result.originalName;
+
             document.getElementById("previewFrame").src = url;
             document.getElementById("resultContainer").style.display = "block";
         } else {
