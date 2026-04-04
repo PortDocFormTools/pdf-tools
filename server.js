@@ -1,34 +1,38 @@
-require('dotenv').config();
-const express = require('express');
-const multer = require('multer');
-const { PDFDocument } = require('pdf-lib'); // Библиотека для редактирования
-const path = require('path');
-const helmet = require('helmet');
+import 'dotenv/config';
+import express from 'express';
+import multer, { memoryStorage } from 'multer';
+import { PDFDocument } from 'pdf-lib'; // Library for PDF manipulation
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import helmet from 'helmet';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 5050;
 
-// 1. Отдаем статические файлы (html, css, js)
+// 1. Serve static files (HTML, CSS, JS)
 app.use(express.static(__dirname));
 app.use(express.json());
-// Отключаем блокировку скриптов (CSP), чтобы работали инлайновые скрипты
+// Disable script blocking (CSP) to allow inline scripts
 app.use(helmet({ contentSecurityPolicy: false }));
 
-// 2. Настройка загрузки (в память)
+// 2. Configure file upload (in-memory storage)
 const upload = multer({
-    storage: multer.memoryStorage(),
+    storage: memoryStorage(),
     limits: { fileSize: 50 * 1024 * 1024 } // 50MB
 });
 
-// Хелпер для кодировки имени файла
+// Helper function for file name encoding
 const fixUtf8 = (str) => Buffer.from(str, 'latin1').toString('utf8');
 
-// === АГРЕССИВНОЕ СЖАТИЕ (Исправленное) ===
+// === PDF Compression Logic (Optimized) ===
 app.post('/api/compress', upload.single('file'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: 'Нет файла' });
+        if (!req.file) return res.status(400).json({ error: 'No file provided' });
         
-        // 1. Считаем размер исходника (строго из буфера)
+        // 1. Calculate original file size (strictly from buffer)
         const sizeBefore = req.file.buffer.length;
         
         const pdfDoc = await PDFDocument.load(req.file.buffer);
@@ -37,7 +41,7 @@ app.post('/api/compress', upload.single('file'), async (req, res) => {
         const copiedPages = await newPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
         copiedPages.forEach((page) => newPdf.addPage(page));
 
-        // Чистим метаданные
+        // Clear metadata
         newPdf.setTitle('');
         newPdf.setAuthor('');
         newPdf.setCreator('');
@@ -45,7 +49,7 @@ app.post('/api/compress', upload.single('file'), async (req, res) => {
 
         const compressedBytes = await newPdf.save({ useObjectStreams: true });
         
-        // 2. Считаем размер результата
+        // 2. Calculate compressed file size
         const sizeAfter = compressedBytes.length;
         const pdfBase64 = Buffer.from(compressedBytes).toString('base64');
 
@@ -53,19 +57,19 @@ app.post('/api/compress', upload.single('file'), async (req, res) => {
             ok: true, 
             originalName: fixUtf8(req.file.originalname), 
             pdfBase64,
-            originalSize: sizeBefore, // Явно отправляем размер ДО
-            newSize: sizeAfter        // Явно отправляем размер ПОСЛЕ
+            originalSize: sizeBefore, // Explicitly send original size
+            newSize: sizeAfter        // Explicitly send compressed size
         });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ error: 'Ошибка сервера' });
+        res.status(500).json({ error: 'Server error' });
     }
 });
 
-// === ЛОГИКА СЛИЯНИЯ (MERGE) ===
+// === PDF Merge Logic ===
 app.post('/api/merge', upload.array('files'), async (req, res) => {
     try {
-        if (!req.files || req.files.length < 2) return res.status(400).json({ error: 'Нужно минимум 2 файла' });
+        if (!req.files || req.files.length < 2) return res.status(400).json({ error: 'At least 2 files required' });
 
         const mergedPdf = await PDFDocument.create();
 
@@ -83,21 +87,21 @@ app.post('/api/merge', upload.array('files'), async (req, res) => {
     }
 });
 
-// === ЛОГИКА РАЗДЕЛЕНИЯ (SPLIT) ===
+// === PDF Split Logic ===
 app.post('/api/split', upload.single('file'), async (req, res) => {
     try {
-        if (!req.file) return res.status(400).json({ error: 'Нет файла' });
+        if (!req.file) return res.status(400).json({ error: 'No file provided' });
         
-        const start = parseInt(req.body.start);
-        const end = parseInt(req.body.end);
+        const start = Number.parseInt(req.body.start);
+        const end = Number.parseInt(req.body.end);
         
-        if (!start || !end) return res.status(400).json({ error: 'Укажите страницы' });
+        if (!start || !end) return res.status(400).json({ error: 'Specify page range' });
 
         const pdfDoc = await PDFDocument.load(req.file.buffer);
         const totalPages = pdfDoc.getPageCount();
 
         if (start < 1 || end > totalPages || start > end) {
-            return res.status(400).json({ error: `Неверный диапазон (всего страниц: ${totalPages})` });
+            return res.status(400).json({ error: `Invalid range (total pages: ${totalPages})` });
         }
 
         const newPdf = await PDFDocument.create();
@@ -120,10 +124,10 @@ app.post('/api/split', upload.single('file'), async (req, res) => {
     }
 });
 
-// Маршрутизация HTML файлов
-app.get('/compress', (req, res) => res.sendFile(path.join(__dirname, 'compress.html')));
-app.get('/merge', (req, res) => res.sendFile(path.join(__dirname, 'merge.html')));
-app.get('/split', (req, res) => res.sendFile(path.join(__dirname, 'split.html')));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+// HTML file routing
+app.get('/compress', (_, res) => res.sendFile(join(__dirname, 'compress.html')));
+app.get('/merge', (_, res) => res.sendFile(join(__dirname, 'merge.html')));
+app.get('/split', (_, res) => res.sendFile(join(__dirname, 'split.html')));
+app.get('/', (_, res) => res.sendFile(join(__dirname, 'index.html')));
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
